@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>LCDPwn | Series of zero-day vulenrabilities affecting a wide variety of devices from well-known vendors</title>
+<meta name="generator" content="Jekyll v4.3.1" />
+<meta property="og:title" content="LCDPwn" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Series of zero-day vulenrabilities affecting a wide variety of devices from well-known vendors" />
+<meta property="og:description" content="Series of zero-day vulenrabilities affecting a wide variety of devices from well-known vendors" />
+<meta property="og:site_name" content="LCDPwn" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="LCDPwn" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Series of zero-day vulenrabilities affecting a wide variety of devices from well-known vendors","headline":"LCDPwn","name":"LCDPwn","url":"/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <meta name="google-site-verification" content="0d4t_hprsM6xsQKeGeYaBnGc8q8SZms2YKwT0JV7R1A" />
+    <meta name="baidu-site-verification" content="code-h6eM3Nexm3" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preload" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" as="style" type="text/css" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <!-- <link rel="shortcut icon" href="/favicon.ico"> -->
+    <link rel="stylesheet" href="/assets/css/style.css?v=">
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+  <body>
+    <a id="skip-to-content" href="#content">Skip to the content.</a>
+
+    <header class="page-header" role="banner">
+      <!-- <h1 class="project-name">LCDPwn</h1> -->
+      <img src="assets/images/LCDPwn_white.png" style="zoom:40%">
+      <h2 class="project-tagline">Series of zero-day vulenrabilities affecting a wide variety of devices from well-known vendors</h2>
+      
+      
+        <a href="./docs/EU-22-Chen-LCDPwn-Breaking-Enterprise.pdf" class="btn">Slide</a>
+        <a href="" class="btn">Whitepaper</a>
+      
+    </header>
+
+    <main id="content" class="main-content" role="main">
+      <h1 id="whats-lcdpwn">What’s LCDPwn?</h1>
+
+<p><strong>LCDPwn</strong> is a series of zero-day vulnerabilities found in two layer-2 protocols called Cisco Discovery Protocol (CDP) and Link Layer Discovery Protocol (LLDP), which affects several CDP and LLDP components. Due to these components being widely used, as a result, nearly 70 kinds of network devices from 30 well-known vendors are vulnerable. There is a high probability that the actual impact would be much larger.</p>
+
+<p>Some vulnerabilities can be used to achieve code execution on the affected devices. A rough classification of these vulnerabilities are as follows.</p>
+
+<ul>
+  <li>Out-of-Bounds Read/Write</li>
+  <li>Buffer Overflow (Stack/Heap/Bss)</li>
+  <li>Integer Overflow/Underflow</li>
+  <li>Memory Leak</li>
+  <li>NULL Pointer Dereference</li>
+  <li>Reachable Assertion</li>
+</ul>
+
+<p>The following are the assigned CVE IDs at the moment.</p>
+
+<p><img src="assets/images/LCDPwn_CVE_IDs.png" style="zoom:60%" /></p>
+
+<p>And the affected vendors are as follows.</p>
+
+<p><img src="assets/images/LCDPwn_affect_vendor.png" style="zoom:60%" /></p>
+
+<h1 id="background">Background</h1>
+
+<p>The <a href="https://www.armis.com/research/cdpwn/">CDPwn</a> research conducted by the Armis labs in 2020, sheds light on the severe impact of attack surface exposed by a proprietary layer-2 protocol called CDP. It contains 5 zero-day vulnerabilities, four of which would be used to achieve code execution. And it affects a wide array of Cisco products, including Cisco switches, routers, IP cameras and IP phones.</p>
+
+<p>While learning <a href="https://www.armis.com/research/cdpwn/">CDPwn</a> research, several questions came to our mind.</p>
+
+<ul>
+  <li>Were these vulnerabilities well fixed?</li>
+  <li>Was there any variant?</li>
+  <li>What about other vendors, or it’s just Cisco’s own business?</li>
+</ul>
+
+<p>To answer these questions, our journey started.</p>
+
+<h1 id="layer-2-discovery-protocol">Layer-2 Discovery Protocol</h1>
+
+<p><strong>Cisco Discovery Protocol</strong> (CDP)  and <strong>Link Layer Discovery Protocol</strong> (LLDP) are the focus of our LCDPwn research. Actually, besides these two protocols, there are other vendor specific discovery protocols, such as Extreme Discovery Protocol (EDP) for Extreme devices, NETGEAR Switch Discovery Protocol (NSDP) for NETGEAR devices, MikroTik Neighbor Discovery Protocol (MNDP) for MikroTik devices, and so on.</p>
+
+<h2 id="cisco-discovery-protocol">Cisco Discovery Protocol</h2>
+
+<p>Cisco Discovery Protocol is a Cisco proprietary protocol, and mainly used in Cisco manufactured devices. It’s used for collecting directly connected neighbor device information, like hardware, software, device name details and so on.</p>
+
+<p>The CDP protocol has two versions. At the moment, the v2 version is the most recent release, and provides more features than version v1. Therefore, it’s more prevalent on Cisco devices.</p>
+
+<p>The following is an example of CDP frame format.</p>
+
+<p><img src="assets/images/CDP_frame_format.png" style="zoom:60%" /></p>
+
+<h2 id="link-layer-discovery-protocol">Link Layer Discovery Protocol</h2>
+
+<p>Compared to CDP protocol, LLDP protocol is more general and vendor-independent. And since LLDP is an open standard, it’s supported on most vendors’ network devices.</p>
+
+<p>The following is an example of LLDP frame format.</p>
+
+<p><img src="assets/images/LLDP_frame_format.png" style="zoom:60%" /></p>
+
+<h1 id="learn-from-cdpwn">Learn from CDPwn</h1>
+
+<p>Those vulnerabilities covered in CDPwn research resided in the processing of CDP packets. When learning this research, we started by analyzing the 5 zero-day vulnerabilities. During this process, we are familiar with the code for parsing CDP packets, and learnt a few vulnerabilities patterns.</p>
+
+<ul>
+  <li>Lack of TLV length field validation</li>
+  <li>Improper use of protocol_type variable</li>
+  <li>Lack of number_of_address field validation</li>
+  <li>Lack of power request count validation</li>
+  <li>Improper use of device_id/port_id/software_version value</li>
+  <li>Discrepancy between the size used for allocation and copy operation</li>
+</ul>
+
+<p>Then we conducted an in-depth analysis against the code to parse CDP packets again, and found another 20 bugs in 5 types of Cisco devices, including NX-OS Switch, IP Phone, IOS XR Router, IP Camera, and Analog Telephone Adapter. Among them, some can be used to achieve code execution.</p>
+
+<p><img src="assets/images/learn_CDPwn_results.png" style="zoom:100%" /></p>
+
+<h1 id="from-cdp-to-lldp">From CDP to LLDP</h1>
+
+<p>We have learnt a few vulnerability patterns from both the original vulnerabilities and newly found vulnerabilities. What’s more, we have a better understanding of the CDP protocol format.</p>
+
+<p>What about LLDP protocol? Compared to CDP protocol, LLDP protocol is more general and vendor-independent. It can be used on most vendors’ network devices. With the knowledge obtained from the previous stage, we continue to investigate the implementations for parsing LLDP packets in network devices.</p>
+
+<h2 id="research-methodology">Research Methodology</h2>
+
+<p><img src="assets/images/LCDPwn_research_methodology.png" style="zoom:60%" /></p>
+
+<h2 id="research-results">Research Results</h2>
+
+<p>Firstly, several common LLDP components are found in firmware from a wide variety of networks, and vulnerable. Among them, the first four are from open source projects, and the last three are closed source components.</p>
+
+<ul>
+  <li><a href="https://lldpd.github.io/">lldpd</a></li>
+  <li><a href="https://openlldp.sourceforge.net/">OpenLLDP</a></li>
+  <li><a href="https://github.com/openvswitch/ovs/tree/master/lib/lldp">openvswitch/lldp</a></li>
+  <li><a href="https://github.com/microchip-ung/ocelot-vsc6825/tree/master/src/lldp">ocelot-vsc6825/lldp</a></li>
+  <li>l2k_lldp.ko</li>
+  <li>switchdrvr</li>
+  <li>ISS.exe</li>
+</ul>
+
+<p>Secondly, nearly 50 bugs are found in a wide variety of devices. Among them, some are common in LLDP components, while others are introduced by the vendor.</p>
+
+<p><img src="assets/images/LCDPwn_research_results.png" style="zoom:60%" /></p>
+
+<h2 id="research-limitations">Research Limitations</h2>
+
+<p>Since static analysis is our main approach, although the device firmware contains affected LLDP components, it might not be actually used on the device. Fortunately, when we report these bugs to vendor and communicate with them, most of bugs are valid and have been fixed.</p>
+
+<p>In addition, due to our target selection strategy, some vendors and devices may be omitted. There is a high probability that the actual impact would be much larger.</p>
+
+<h1 id="recommendation">Recommendation</h1>
+
+<p>All the vulnerabilities have been reported to the corresponding vendors and have been fixed. If you (or your organization) own some of the affected devices from these vendors, please update to the latest version if possible.</p>
+
+<p>Besides, according to the LCDPwn research:</p>
+
+<ul>
+  <li>Variant analysis is cool, and can be done on a broader level, such as looking into the implementation of similar protocols/components, or the same implementation on different devices/systems.</li>
+  <li>Software Bills of Materials (SBOMs) are important in software security and software supply chain.</li>
+  <li>Keep components up-to-date, and avoid using outdated components if possible.</li>
+  <li>Pay attention to the OEM software, since the impact will be amplified if vulnerability exists in the OEM software.</li>
+</ul>
+
+<h1 id="q--a">Q &amp; A</h1>
+
+<h2 id="why-it-is-called-lcdpwn">Why it is called LCDPwn?</h2>
+
+<p>The CDPwn research is the origin of our work. Since these vulnerabilities are related to CDP and LLDP protocol, so we named our research as LCDPwn  (aka Learn from CDPwn) similarly.</p>
+
+<h2 id="who-conducted-the-lcdpwn-research">Who conducted the LCDPwn research?</h2>
+
+<p>cq674350529</p>
+
+<h2 id="whats-the-difference-between-the-cdpwn-and-lcdpwn-research">What’s the difference between the CDPwn and LCDPwn research?</h2>
+
+<p>The CDPwn research is the origin of our work. Based on the CDPwn research, on the one hand, we conducted an in-depth analysis against the code to parse CDP packets again, and found another 20+ bug on Cisco devices, including IOS XR routers, Nexus switches, IP Phones, IP Cameras and so on.</p>
+
+<p>On the other hand, since CDP is a Cisco proprietary protocol used in Cisco-manufactured devices, LLDP protocol is more general and vendor-independent. It can be used on most vendors’ network devices. With the obtained knowledge, we continued to investigate the implementations for parsing LLDP packets in network devices from well-known vendors. As a result, several common LLDP components are found in firmware from a wide variety of networks, and nearly 50 bugs are found in a wide variety of devices.</p>
+
+<h2 id="whats-the-requirements-to-triggerexploit-these-vulnerabilities">What’s the requirements to trigger/exploit these vulnerabilities?</h2>
+
+<p>The CDP and LLDP are layer-2 broadcast protocol, so you should be network-adjacent to the affected devices. In addition, no authentication is needed.</p>
+
+<h2 id="what-kind-of-devices-are-affected">What kind of devices are affected?</h2>
+
+<p>As for the CDP protocol, it’s supported and enabled on most Cisco’s devices in default. According to our LCDPwn research, those devices like Nexus Switch, IP Phone, IP Camera, IOS XR Router, and Analog Telephone Adapter are affected. Due to the contract limitations, we are only able to get firmware for these devices and evaluate them.</p>
+
+<p>As for the LLDP protocol, it’s widely supported on network switch. Also, other devices like router, access point, wireless controller, IP camera and VOIP gateway may support LLDP feature. Besides, the virtual switch functionality provided by Open vSwitch also supports LLDP feature. Moreover, on some systems like Ubuntu and FreeBSD, LLDP feature can be supported by installing specific LLDP package. According to our LCDPwn research, the above cases are all affected.</p>
+
+<h2 id="am-i-affected-by-these-vulnerabilities">Am I affected by these vulnerabilities?</h2>
+
+<p>There is a high probability that you (or your organization) are affected, if :</p>
+
+<ul>
+  <li>own some network devices from these vendors, and the CDP/LLDP feature is supported and enabled</li>
+  <li>own some network devices using affected CDP/LLDP components, and the CDP/LLDP feature is supported and enabled</li>
+</ul>
+
+<p>Besides, other network devices, which not covered in LCDPwn research and support CDP/LLDP feature, may be affected.</p>
+
+<h1 id="references">References</h1>
+
+<ul>
+  <li><a href="https://www.armis.com/research/cdpwn/">CDPWN</a></li>
+  <li><a href="https://learningnetwork.cisco.com/s/article/cisco-discovery-protocol-cdp-x">Cisco Discovery Protocol (CDP)</a></li>
+  <li><a href="https://learningnetwork.cisco.com/s/article/link-layer-discovery-protocol-lldp-x">Link Layer Discovery Protocol (LLDP)</a></li>
+  <li><a href="https://lldpd.github.io/">lldpd</a></li>
+  <li><a href="https://openlldp.sourceforge.net/">OpenLLDP</a></li>
+  <li><a href="https://github.com/openvswitch/ovs/tree/master/lib/lldp">openvswitch/lldp</a></li>
+  <li><a href="https://github.com/microchip-ung/ocelot-vsc6825/tree/master/src/lldp">ocelot-vsc6825/lldp/</a></li>
+</ul>
+
+<h1 id="appendix-security-advisorychange-log">Appendix: Security Advisory/Change Log</h1>
+
+<div>
+   <table style="border:0;">
+    <tr>
+        <td>Cisco</td>
+        <td> 
+            <!-- IP Camera -->
+            <ul>
+                <li><a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cdp-memleak-k5Z7m55t">Cisco Video Surveillance 8000 Series IP Cameras Cisco Discovery Protocol Memory Leak Vulnerability</a></li>
+                <li><a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipcameras-rce-dos-uPyJYxN3">Cisco Video Surveillance 8000 Series IP Cameras Cisco Discovery Protocol Remote Code Execution and Denial of Service Vulnerabilities</a></li>
+       <li><a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cdp-memleak-heyebx9">Cisco Video Surveillance 8000 Series IP Cameras Cisco Discovery Protocol Memory Leak Vulnerability</a></li>
+       <li><a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-cdp-rcedos-mAHR8vNx">Cisco Video Surveillance 8000 Series IP Cameras Cisco Discovery Protocol Remote Code Execution and Denial of Service Vulnerability</a></li>
+                <li><a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipcameras-dos-9zdZcUfq">Cisco Video Surveillance 8000 Series IP Cameras Cisco Discovery Protocol Denial of Service Vulnerability</a></li>
+                <li><a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipcameras-dos-fc3F6LzT">Cisco Video Surveillance 8000 Series IP Cameras Cisco Discovery Protocol Denial of Service Vulnerability</a></li>
+            </ul>
+            <!-- IP Phone -->
+            <ul>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipphone-rce-dos-U2PsSkz3">Cisco IP Phones Buffer Overflow and Denial of Service Vulnerabilities</a>
+                </li>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipp-oobwrite-8cMF5r7U">Cisco IP Phone 7800 and 8800 Series Cisco Discovery Protocol Stack Overflow Vulnerability</a>
+                </li>
+            </ul>
+            <!-- Small Business RV Series Routers -->
+            <ul>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-rv-multi-lldp-u7e4chCe">Cisco Small Business RV Series Routers Link Layer Discovery Protocol Vulnerabilities</a>
+                </li>
+            </ul>
+            <!-- Video Surveillance 7070 IP Camera -->
+            <ul>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipcamera-lldp-mem-wGqundTq">Cisco Video Surveillance 7000 Series IP Cameras Link Layer Discovery Protocol Memory Leak Vulnerabilities</a>
+                </li>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ipcamera-lldp-dos-OFP7j9j">Cisco Video Surveillance 7000 Series IP Cameras Link Layer Discovery Protocol Double-Free Denial of Service Vulnerability</a>
+                </li>
+            </ul>
+            <!-- Small Business 220 Series Smart Switches -->
+            <ul>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-sb220-lldp-multivuls-mVRUtQ8T">Cisco Small Business 220 Series Smart Switches Link Layer Discovery Protocol Vulnerabilities</a>
+                </li>
+            </ul>
+            <!-- IOS XR Router -->
+            <ul>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-xr-cdp-wnALzvT2">Cisco IOS XR Software Cisco Discovery Protocol Denial of Service Vulnerability
+                    </a>
+                </li>
+            </ul>
+            <!-- ATA 190 Series Analog Telephone Adapter -->
+            <ul>
+                <li>
+                    <a href="https://tools.cisco.com/security/center/content/CiscoSecurityAdvisory/cisco-sa-ata19x-multivuln-GEZYVvs">Cisco ATA 190 Series Analog Telephone Adapter Software Vulnerabilities
+                    </a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>Ruckus Wireless</td>
+        <td>
+            <ul>
+                <li>
+                    <a href="https://support.ruckuswireless.com/security_bulletins/307">Ruckus AP LLDP Vulnerability (CVE-2015-8011, CVE-2015-8012)</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>Moxa</td>
+        <td>
+            <ul>
+                <li>
+                    <a href="https://www.moxa.com/en/support/product-support/security-advisory/vport-06ec-2v-series-ip-cameras-vulnerabilities">VPort 06EC-2V Series IP Cameras Vulnerabilities</a>
+                </li>
+                <li><a href="https://www.moxa.com/en/support/product-support/security-advisory/vport-06ec-2v-vport-461a-ip-cameras-video-servers-vulnerabilities">VPort 06EC-2V Series and VPort 461A Series IP Cameras and Video Servers Vulnerabilities</a></li>
+                <li><a href="https://www.moxa.com/en/support/product-support/security-advisory/tn-5900-secure-routers-vulnerability">TN-5900 Series Secure Routers Vulnerability</a></li>
+                <li><a href="https://www.moxa.com/en/support/product-support/security-advisory/edr-g903-g902-810-secure-routers-vulnerability">EDR-G903, EDR-G902, and EDR-810 Series Secure Routers Vulnerability</a></li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>Axis</td>
+        <td>
+            <ul>
+                <li><a href="http://ftp.axis.com/pub_soft/MPQT/Q3517/10_4_0/Q3517_10_4_0_release_notes.txt">Improved Link Layer Discovery Protocol (LLDP) system stability</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>TRENDnet</td>
+        <td>
+            <ul>
+                <li><a href="https://www.trendnet.com/support/view.asp?cat=4&amp;id=81">BUFFER OVERFLOW VULNERABILITIES IN THE LINK LAYER DISCOVERY PROTOCOL (LLDP) ON SOME OF THE L2 MANAGED INDUSTRIAL SWITCHES</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>Fortinet</td>
+        <td>
+            <ul>
+                <li><a href="https://www.fortiguard.com/psirt/FG-IR-21-026">FortiSwitch - memory leak issue in lldpmedd daemon</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>QNAP</td>
+        <td>
+            <ul>
+                <li><a href="https://www.qnap.com/zh-tw/security-advisory/qsa-21-23">Out-of-Bounds Read Vulnerability in QSS</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>Zyxel</td>
+        <td>
+            <ul>
+                <li><a href="https://community.zyxel.com/en/discussion/9928/switch-gs1900-series-v2-60-patch-3-firmware-release">Zyxel Switch GS1900 Series: fixed LLDP related Vulnerabilites</a>
+                </li>
+                <li><a href="https://community.zyxel.com/en/discussion/10395/release-note-access-point-series-v6-20-firmware-has-been-released/p1">Access Points v6.20 Release Note:  LLDP vulnerabilities</a></li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>SONICWALL</td>
+        <td>
+            <ul>
+                <li><a href="https://psirt.global.sonicwall.com/vuln-detail/SNWLID-2021-0011">SONICWALL SWITCH LLDP PROTOCOL MULTIPLE OUT-OF-BOUND READ VULNERABILITY</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>Juniper</td>
+        <td>
+            <ul>
+                <li><a href="https://supportportal.juniper.net/s/article/2021-07-Security-Bulletin-Junos-OS-and-Junos-OS-Evolved-LLDP-Out-of-Bounds-Read-vulnerability-in-l2cpd-CVE-2021-0277?language=en_US">2021-07 Security Bulletin: Junos OS and Junos OS Evolved: LLDP Out-of-Bounds Read vulnerability in l2cpd (CVE-2021-0277)</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>Aruba</td>
+        <td>
+            <ul>
+                <li><a href="https://www.arubanetworks.com/assets/alert/ARUBA-PSA-2021-007.txt">Unauthenticated Denial of Service via LLDP Protocol (CVE-2021-34618)</a>
+                </li>
+                <li>
+                    <a href="https://support.hpe.com/hpesc/public/docDisplay?docLocale=en_US&amp;docId=emr_na-hpesbnw04234en_us">HPE FlexNetwork 5130 EL Switch Series, Local Buffer Overflow</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td>NETGEAR</td>
+        <td>
+            <ul>
+                <li><a href="https://kb.netgear.com/000065365/Security-Advisory-for-Pre-Authentication-Buffer-Overflow-on-Some-Switches-PSV-2022-0015">Security Advisory for Pre-Authentication Buffer Overflow on Some Switches, PSV-2022-0015</a>
+                </li>
+                <li>
+                    <a href="https://kb.netgear.com/000065366/Security-Advisory-for-Pre-Authentication-Buffer-Overflow-on-Some-Switches-PSV-2022-0016">Security Advisory for Pre-Authentication Buffer Overflow on Some Switches, PSV-2022-0016</a>
+                </li>
+                <li>
+                    <a href="https://kb.netgear.com/000065404/Security-Advisory-for-Pre-Authentication-Buffer-Overflow-on-RAX120-PSV-2022-0018">Security Advisory for Pre-Authentication Buffer Overflow on RAX120, PSV-2022-0018</a>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    </table>
+</div>
+
+<blockquote>
+  <p>As for some vendors, there are no security advisory or change log available.</p>
+</blockquote>
+
+
+      <footer class="site-footer">
+        <!--   -->
+        <!-- <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span> -->
+        <span><img src="/assets/images/LCDPwn_shade.png" style="zoom: 10%;"></span>
+      </footer>
+    </main>
+  </body>
+</html>
