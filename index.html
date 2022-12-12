@@ -28,6 +28,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="shortcut icon" href="/uploads/avatar_64.jpg">
     <link rel="stylesheet" href="./assets/css/style.css">
+    <!-- add fancybox support -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css"/>
     <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
 
 <!-- Setup Google Analytics -->
@@ -41,6 +43,26 @@
 
   </head>
   <body>
+    <!-- add fancybox support -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("p img").each(function() {
+                var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+                $(this).wrapAll(strA);
+            });
+
+            Fancybox.bind('[data-fancybox="gallery"]', {
+              on: {
+                load: (fancybox, slide) => {
+                  slide.$content.style.background = "#fff";
+                },
+              }
+            });
+        });
+    </script>
+
     <a id="skip-to-content" href="#content">Skip to the content.</a>
 
     <header class="page-header" role="banner">
@@ -80,7 +102,7 @@
 
 <h1 id="background">Background</h1>
 
-<p>The <a href="https://www.armis.com/research/cdpwn/">CDPwn</a> research conducted by the Armis labs in 2020, sheds light on the severe impact of attack surface exposed by a proprietary layer-2 protocol called CDP. It contains 5 zero-day vulnerabilities, four of which would be used to achieve code execution. And it affects a wide array of Cisco products, including Cisco switches, routers, IP cameras and IP phones.</p>
+<p>The <a href="https://www.armis.com/research/cdpwn/">CDPwn</a> research conducted by the Armis labs in 2020, sheds light on the severe impact of attack surface exposed by a proprietary layer-2 protocol called CDP. It contains 5 zero-day vulnerabilities, four of which could be used to achieve code execution. And it affects a wide array of Cisco products, including Cisco switches, routers, IP cameras and IP phones.</p>
 
 <p>While learning <a href="https://www.armis.com/research/cdpwn/">CDPwn</a> research, several questions came to our mind.</p>
 
